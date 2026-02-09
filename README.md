@@ -1,182 +1,57 @@
+# Capastone Project : CyberThreat Detection
 
+This notebook details a comprehensive analysis of  of network intrusion detection using the `cyberfeddefender_dataset.csv` dataset, focusing on building a classification model to detect network intrusions. The process covers data preparation, exploratory data analysis, feature engineering, and baseline model development and evaluation.
 
-## Project Overview
+## Assignment Notebook
 
-### Goal:
-This project aims to perform a comprehensive analysis of network intrusion detection. The primary objective is to develop and evaluate a classification model to identify various types of network attacks using the provided dataset.
+[Click here to view the assignment notebook](https://github.com/ojbskvasu/Capastone_CyberThreat_Detection/blob/main/cyberthreat_detection.ipynb)
 
-### Dataset:
-The dataset used is `cyberfeddefender_dataset.csv`, located at `/content/data/cyberfeddefender_dataset.csv`.
-
-### Initial Loading Details:
-The dataset was loaded into a pandas DataFrame named `df` using `pd.read_csv()`. The initial inspection using `df.head()` showed 23 columns, including 'Timestamp', 'Source_IP', 'Destination_IP', 'Protocol', 'Packet_Length', 'Duration', 'Bytes_Sent', 'Bytes_Received', 'Flags', 'Flow_Packets/s', 'Flow_Bytes/s', 'Avg_Packet_Size', 'Total_Fwd_Packets', 'Total_Bwd_Packets', 'Fwd_Header_Length', 'Bwd_Header_Length', 'Sub_Flow_Fwd_Bytes', 'Sub_Flow_Bwd_Bytes', 'Inbound', 'Attack_Type', and the target variable 'Label'.
-
-
-
-## Data Preparation
-
-### 1. Data Loading and Initial Inspection
-- The dataset was loaded from `/content/data/cyberfeddefender_dataset.csv` into a pandas DataFrame.
-- Initial inspection revealed 1430 entries and 23 columns.
+### 1. Data Loading
+- The `cyberfeddefender_dataset.csv` file was successfully loaded into a pandas DataFrame. This initial step involved verifying the successful import and a quick glance at the dataset's structure.
 
 ### 2. Data Cleaning
-- **Missing Values:** No missing values were found across any columns, as verified by `df.isnull().sum()`.
-- **Duplicate Rows:** No duplicate rows were identified or removed, as confirmed by `df.duplicated().sum()`.
+- **Missing Values**: A thorough check for missing values across all columns revealed that the dataset was remarkably clean, with no `null` entries. This negated the need for any imputation strategies.
+- **Duplicate Rows**: Similarly, an inspection for duplicate rows found no exact duplicates, indicating high data integrity and eliminating the need for duplicate removal.
 
 ### 3. Exploratory Data Analysis (EDA)
-- **Descriptive Statistics:** Numerical and categorical column statistics were analyzed to understand data distributions and identify potential issues.
-- **Visualizations:**
-    - Histograms with KDE were generated for key numerical features (`Packet_Length`, `Duration`, `Bytes_Sent`, `Bytes_Received`, `Flow_Packets/s`) to visualize their distributions. (Saved as `/content/images/distribution_plots.png`)
-    - Count plots were created for categorical features (`Protocol`, `Attack_Type`, `Label`) to show their frequency distributions. (Saved as `/content/images/count_plots.png`)
-    - Box plots were used to visualize outliers in the numerical features. (Saved as `/content/images/box_plots.png`)
+- **Descriptive Statistics**: Detailed descriptive statistics were generated for both numerical and categorical columns. This provided insights into the central tendency, dispersion, and distribution of numerical features, and frequency counts for categorical ones.
+- **Data Types**: Initial data type analysis confirmed several `object` type columns, notably `Timestamp`, `Source_IP`, `Destination_IP`, `Protocol`, `Flags`, and `Attack_Type`, alongside numerical `int64` and `float64` types.
+- **Distribution Plots**: Histograms with Kernel Density Estimates (KDE) were created for key numerical features (`Packet_Length`, `Duration`, `Bytes_Sent`, `Bytes_Received`, `Flow_Packets/s`) to visualize their distributions. Count plots were used for categorical features (`Protocol`, `Attack_Type`, `Label`) to show their frequency.
 
-### 4. Feature Engineering
-- **Time-based Features:** The 'Timestamp' column was converted to datetime objects, and new features ('Hour', 'DayOfWeek', 'Month', 'Year') were extracted.
-- **Traffic Volume Features:**
-    - `Total_Bytes_Transferred`: Created by summing 'Bytes_Sent' and 'Bytes_Received'.
-    - `Bytes_Ratio`: Calculated as 'Bytes_Sent' divided by ('Bytes_Received' + 1) to represent asymmetric data transfer, handling division by zero.
+### 4. Outlier Analysis
+- **Box Plots**: Box plots were generated for all numerical features. These visualizations revealed the presence of potential outliers in several columns, indicating values that fall outside the typical data range. While outliers were identified, no specific removal or imputation strategy was applied at this baseline stage, but it is noted as a point for future investigation.
 
-### 5. Data Preprocessing for Modeling (Leakage Prevention)
-- **Feature and Target Separation:** 'Label' was designated as the target variable (y), and all other relevant columns (excluding 'Timestamp') as features (X).
-- **Train-Test Split:** The dataset was split into training (80%) and testing (20%) sets using `train_test_split` with `random_state=42` and `stratify=y` to maintain class distribution.
-- **Column Transformation:** A `ColumnTransformer` was used to apply:
-    - `StandardScaler` to numerical features.
-    - `OneHotEncoder` to categorical features (e.g., 'Source_IP', 'Destination_IP', 'Protocol', 'Flags', 'Attack_Type').
-- The preprocessor was `fit_transform` only on the training data (`X_train`) and then `transform` on both the training (`X_train_processed`) and test data (`X_test_processed`) to prevent data leakage.
-- Processed arrays were converted back to DataFrames (`X_train_df`, `X_test_df`) using the extracted `feature_names` to maintain column labels for subsequent model training.
+### 5. Feature Engineering
+- **Timestamp Conversion**: The `Timestamp` column, initially an `object` type, was converted to a `datetime` object, enabling time-series based feature extraction.
+- **Time-based Features**: New features such as `Hour`, `DayOfWeek`, `Month`, and `Year` were extracted from the `Timestamp` column to capture temporal patterns.
+- **Total Bytes Transferred**: A new feature, `Total_Bytes_Transferred`, was created by summing `Bytes_Sent` and `Bytes_Received` to represent the total data volume per flow.
+- **Bytes Ratio**: Another feature, `Bytes_Ratio`, was engineered by dividing `Bytes_Sent` by `Bytes_Received` (with a small offset to prevent division by zero). This ratio can help identify asymmetric data flows.
 
+### 6. Classification Modeling Process
+- **Data Separation**: Features (X) and the target variable (y, 'Label') were separated. The original `Timestamp` column was dropped from features as its components were already extracted.
+- **Categorical Encoding**: Categorical features (`Source_IP`, `Destination_IP`, `Protocol`, `Flags`, `Attack_Type`) were identified and transformed using one-hot encoding via `pd.get_dummies()`, expanding the feature space significantly.
+- **Data Splitting**: The dataset was split into training (80%) and testing (20%) sets using `train_test_split`, with `stratify=y` to maintain the original class distribution in both sets.
+- **Feature Scaling**: Numerical features were scaled using `StandardScaler` on both training and test sets to address convergence issues encountered with the Logistic Regression model, ensuring that all features contribute equally to the distance calculations.
 
+### 7. Evaluation Metric Selection and Rationale
+- Given the context of network intrusion detection, where **false negatives (missed attacks) are more critical than false positives (false alarms)**, a suite of metrics was chosen:
+    - **Recall**: Prioritized for its ability to minimize missed attacks.
+    - **Precision**: Important for managing false positives and preventing alert fatigue.
+    - **F1-Score**: Provides a balanced measure between precision and recall.
+    - **ROC AUC**: Chosen for its robustness to class imbalance and its overall assessment of the model's discriminative power across various thresholds.
+- Accuracy was deemed less suitable due to potential misleading results in scenarios with class imbalance.
 
-## Model Development and Evaluation
+### 8. Baseline Model Performance (Logistic Regression)
+- **Model Training**: A Logistic Regression model was chosen as the baseline and trained on the scaled training data.
+- **Performance Evaluation**: The model's performance on the test set was evaluated using the selected metrics:
+    - **Accuracy**: 0.47
+    - **Precision, Recall, F1-score**: Ranged from 0.46 to 0.48 for both classes.
+    - **ROC AUC Score**: 0.47
+- **Visualization**: A Confusion Matrix and an ROC Curve were generated and saved to the `/images` folder, visually confirming the model's performance.
+## How to Run
 
-Three classification models were developed and evaluated: Logistic Regression, Random Forest, and Decision Tree.
+1. Clone this repository:
 
-### 1. Logistic Regression
-- **Model:** Logistic Regression (`LogisticRegression(random_state=42, max_iter=5000)`)
-- **Preprocessing:** Numerical features were scaled using `StandardScaler` prior to training to address convergence issues and prevent data leakage.
-- **Evaluation Metrics:**
-    - Accuracy: 0.47
-    - Precision (Class 0): 0.48
-    - Recall (Class 0): 0.47
-    - F1-Score (Class 0): 0.48
-    - Precision (Class 1): 0.46
-    - Recall (Class 1): 0.47
-    - F1-Score (Class 1): 0.47
-    - ROC AUC Score: 0.47
-- **Visualizations:**
-    - Confusion Matrix (Saved as `/content/images/confusion_matrix.png`)
-    - ROC Curve (Saved as `/content/images/roc_curve.png`)
-
-### 2. Random Forest Classifier
-- **Model:** Random Forest Classifier (`RandomForestClassifier(random_state=42)`)
-- **Evaluation Metrics:**
-    - Accuracy: 0.47
-    - Precision (Class 0): 0.48
-    - Recall (Class 0): 0.55
-    - F1-Score (Class 0): 0.51
-    - Precision (Class 1): 0.45
-    - Recall (Class 1): 0.39
-    - F1-Score (Class 1): 0.42
-    - ROC AUC Score: 0.46
-- **Visualizations:**
-    - Confusion Matrix (Saved as `/content/images/confusion_matrix_rf.png`)
-    - ROC Curve (Saved as `/content/images/roc_curve_rf.png`)
-- **Hyperparameter Tuning:** `GridSearchCV` was performed to optimize Random Forest hyperparameters.
-    - Best parameters found: {'max_depth': 10, 'min_samples_leaf': 4, 'min_samples_split': 10, 'n_estimators': 200}
-    - Best ROC AUC score from tuning: 0.53
-
-### 3. Decision Tree Classifier
-- **Model:** Decision Tree Classifier (`DecisionTreeClassifier(random_state=42)`)
-- **Evaluation Metrics:**
-    - Accuracy: 0.49
-    - Precision (Class 0): 0.50
-    - Recall (Class 0): 0.49
-    - F1-Score (Class 0): 0.49
-    - Precision (Class 1): 0.48
-    - Recall (Class 1): 0.49
-    - F1-Score (Class 1): 0.48
-    - ROC AUC Score: 0.49
-- **Visualizations:**
-    - Confusion Matrix (Saved as `/content/images/confusion_matrix_dt.png`)
-    - ROC Curve (Saved as `/content/images/roc_curve_dt.png`)
-
-
-
-## Feature Importance Analysis
-
-Feature importances were analyzed using the Random Forest Classifier to identify the most influential features.
-
-- **Top 10 Features:**
-    - `Flow_Bytes/s`
-    - `Bytes_Sent`
-    - `Packet_Length`
-    - `Flow_Packets/s`
-    - `Sub_Flow_Fwd_Bytes`
-    - `Bytes_Ratio`
-    - `Duration`
-    - `Sub_Flow_Bwd_Bytes`
-    - `Bytes_Received`
-    - `Total_Fwd_Packets`
-
-These features, primarily related to network traffic volume and statistics, are highly predictive of network intrusion.
-- **Visualization:** A bar plot showing the top 10 feature importances was saved as `/content/images/feature_importances_rf.png`.
-
-
-
-## Overall Findings and Recommendations
-
-### 1. Model Performance Comparison
-
-| Model                 | Accuracy | Precision (Class 0) | Recall (Class 0) | F1-Score (Class 0) | Precision (Class 1) | Recall (Class 1) | F1-Score (Class 1) | ROC AUC Score |
-| :-------------------- | :------- | :------------------ | :--------------- | :----------------- | :------------------ | :--------------- | :----------------- | :------------ |
-| Logistic Regression   | 0.47     | 0.48                | 0.47             | 0.48               | 0.46                | 0.47             | 0.47               | 0.47          |
-| Random Forest         | 0.47     | 0.48                | 0.55             | 0.51               | 0.45                | 0.39             | 0.42               | 0.46          |
-| Decision Tree         | 0.49     | 0.50                | 0.49             | 0.49               | 0.48                | 0.49             | 0.48               | 0.49          |
-
-The **Decision Tree Classifier** generally performed best among the three models, showing slightly higher Accuracy, F1-Scores for both classes, and ROC AUC score. The Random Forest model, despite hyperparameter tuning, exhibited lower performance for Class 1 (attack detection).
-
-### 2. Feature Importance Insights from Random Forest:
-
-The top 10 most influential features, as determined by the Random Forest model, are:
-
-- `Flow_Bytes/s`
-- `Bytes_Sent`
-- `Packet_Length`
-- `Flow_Packets/s`
-- `Sub_Flow_Fwd_Bytes`
-- `Bytes_Ratio`
-- `Duration`
-- `Sub_Flow_Bwd_Bytes`
-- `Bytes_Received`
-- `Total_Fwd_Packets`
-
-These features are primarily related to network traffic volume, duration, and packet statistics. This suggests that the model heavily relies on the quantitative aspects of network flows to distinguish between normal and attack traffic. Features like Timestamp-derived values (Hour, DayOfWeek, Month, Year) and specific IP addresses or protocols have lower importance, indicating that the magnitude of traffic characteristics is more predictive than temporal patterns or specific network entities in this dataset for the Random Forest model.
-
-### 3. Strengths and Weaknesses of Each Model:
-
-*   **Logistic Regression:**
-    *   **Strengths:** Simple, interpretable, good baseline. Relatively stable performance across both classes.
-    *   **Weaknesses:** Achieves the lowest overall performance among the three models. Its linear nature may not capture complex relationships in the data.
-
-*   **Random Forest:**
-    *   **Strengths:** Ensemble method, generally robust to overfitting, can handle non-linear relationships. Provides feature importance, which is valuable for interpretability and feature selection.
-    *   **Weaknesses:** Performed the worst in terms of ROC AUC and F1-score for class 1. This suggests that while it is good at identifying class 0 (normal), it struggles with the minority class (attacks). It might be overfitting to the majority class or the hyperparameters need more aggressive tuning to address class imbalance.
-
-*   **Decision Tree:**
-    *   **Strengths:** Relatively simple to understand and interpret (for shallow trees). Achieved the best performance among the three in terms of Accuracy, F1-score (for class 1), and ROC AUC.
-    *   **Weaknesses:** Prone to overfitting if not properly regularized (e.g., controlling `max_depth`). Performance can be unstable with small variations in data.
-
-### 4. Recommendations:
-
-For this intrusion detection task, the **Decision Tree Classifier** currently appears to be the most promising model given its slightly superior performance metrics, especially in identifying the attack class (Class 1) compared to the other two. Its interpretability is also a significant advantage in security-related applications.
-
-### 5. Limitations and Next Steps:
-
-*   **Limitations:** All models show relatively low performance (ROC AUC scores are below 0.5, implying they are not much better than random guessing). This suggests that the current features or the inherent complexity of the problem might require more sophisticated approaches or a more balanced dataset. The dataset might suffer from severe class imbalance, which these models did not effectively handle.
-*   **Next Steps for Improvement:**
-    *   **Advanced Feature Engineering:** Explore more complex interactions between features or generate sequence-based features from network flows.
-    *   **Addressing Class Imbalance:** Implement techniques like SMOTE (Synthetic Minority Over-sampling Technique), ADASYN, or explore different sampling strategies (undersampling majority class, oversampling minority class) during training.
-    *   **Hyperparameter Tuning:** Conduct more extensive hyperparameter tuning for all models, especially for the Random Forest, using techniques beyond `GridSearchCV` like `RandomizedSearchCV` or Bayesian optimization.
-    *   **Ensemble Methods (Advanced):** Investigate more powerful ensemble methods like Gradient Boosting (e.g., XGBoost, LightGBM) or Stacking, which often yield better results in complex classification tasks.
-    *   **Deep Learning Models:** For highly complex patterns, recurrent neural networks (RNNs) or convolutional neural networks (CNNs) could be explored, especially if the data can be represented as sequences or images.
-
+   ```bash
+   https://github.com/ojbskvasu/Capastone_CyberThreat_Detection.git
+   ```
