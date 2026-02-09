@@ -48,6 +48,35 @@ This notebook details a comprehensive analysis of  of network intrusion detectio
     - **Precision, Recall, F1-score**: Ranged from 0.46 to 0.48 for both classes.
     - **ROC AUC Score**: 0.47
 - **Visualization**: A Confusion Matrix and an ROC Curve were generated and saved to the `/images` folder, visually confirming the model's performance.
+
+### 9.Comparison of Key Performance Metrics:
+
+Model	             Accuracy	Precision (Class 0)	Recall (Class 0)	F1-Score (Class 0)	Precision (Class 1)	Recall (Class 1)	F1-Score (Class 1)	ROC AUC Score
+Logistic Regression	  0.47	       0.48	             0.47	              0.48	              0.46	              0.47	              0.47	             0.47
+Random Forest	      0.45	       0.47	             0.53	              0.50	              0.43	              0.37	              0.40	             0.43
+Decision Tree	      0.49	       0.50	             0.47	              0.49	              0.48	              0.51	              0.50	             0.49
+From the comparison, the Decision Tree Classifier exhibits slightly better overall performance in terms of Accuracy (0.49) and F1-Score (0.49 for class 0, 0.50 for class 1), and a higher ROC AUC Score (0.49) compared to Logistic Regression (Accuracy 0.47, ROC AUC 0.47) and Random Forest (Accuracy 0.45, ROC AUC 0.43). The Random Forest model shows a notable drop in Recall and F1-score for class 1 (minority class representing attacks), indicating it struggles to identify actual attacks.
+
+### 10.Strengths and Weaknesses of Each Model:
+
+- ** Logistic Regression **:
+
+Strengths: Simple, interpretable, good baseline. Relatively stable performance across both classes. The model benefits significantly from feature scaling.
+Weaknesses: Achieves the lowest overall performance among the three models. Its linear nature may not capture complex relationships in the data.
+
+- ** Random Forest **:
+
+Strengths: Ensemble method, generally robust to overfitting, can handle non-linear relationships. Provides feature importance, which is valuable for interpretability and feature selection.
+Weaknesses: Performed the worst in terms of ROC AUC and F1-score for class 1. This suggests that while it is good at identifying class 0 (normal), it struggles with the minority class (attacks). It might be overfitting to the majority class or the hyperparameters need more aggressive tuning to address class imbalance.
+
+- ** Decision Tree **:
+
+Strengths: Relatively simple to understand and interpret (for shallow trees). Achieved the best performance among the three in terms of Accuracy, F1-score (for class 1), and ROC AUC.
+Weaknesses: Prone to overfitting if not properly regularized (e.g., controlling max_depth). Performance can be unstable with small variations in data.
+
+### 10.Recommendations:
+
+For this intrusion detection task, the Decision Tree Classifier currently appears to be the most promising model given its slightly superior performance metrics, especially in identifying the attack class (Class 1) compared to the other two. Its interpretability is also a significant advantage in security-related applications.
 ## How to Run
 
 1. Clone this repository:
